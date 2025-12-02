@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Galería</title>
+<link rel='stylesheet' href='../css/style.css'>
+</head>
+<body>
+<header>GALERÍA 📸</header>
+<nav>
+    <a href='../index.html'>Inicio</a>
+    <a href='historia.html'>Nuestra Historia</a>
+    <a href='galeria.html'>Galería</a>
+</nav>
+<section class="gallery-section">
+    <h2>Nuestras fotos</h2>
+
+    <div id="scattered" class="scattered-container" aria-live="polite"></div>
+
+    <!-- Modal para ver imagen/video ampliado -->
+    <div id="modal" class="gallery-modal" aria-hidden="true">
+        <button id="modal-close" class="modal-close">✕</button>
+        <div class="modal-content" id="modal-content"></div>
+    </div>
+
+    <script>
+        // Archivos en img/imggaleria (misma lista que la carpeta)
+        const files = [
+            "galeria1.mp4","galeria10.jpg","galeria100.jpg","galeria101.jpg","galeria102.jpg","galeria103.jpg","galeria104.jpg","galeria105.jpg","galeria106.jpg","galeria107.jpg","galeria108.jpg","galeria109.jpg","galeria11.jpg","galeria110.jpg","galeria111.jpg","galeria112.jpg","galeria113.jpg","galeria114.jpg","galeria115.jpg","galeria116.jpg","galeria117.jpg","galeria118.jpg","galeria119.jpg","galeria12.jpg","galeria120.jpg","galeria121.jpg","galeria122.jpg","galeria123.jpg","galeria124.jpg","galeria125.jpg","galeria126.jpg","galeria127.jpg","galeria128.jpg","galeria129.jpg","galeria13.jpg","galeria130.jpg","galeria14.jpg","galeria15.jpg","galeria16.jpg","galeria17.jpg","galeria18.jpg","galeria19.jpg","galeria2.jpg","galeria20.mp4","galeria21.jpg","galeria22.jpg","galeria23.jpg","galeria24.jpg","galeria25.jpg","galeria26.jpg","galeria27.jpg","galeria28.jpg","galeria29.jpg","galeria3.mp4","galeria30.jpg","galeria31.jpg","galeria32.jpg","galeria33.jpg","galeria34.jpg","galeria35.jpg","galeria36.jpg","galeria37.jpg","galeria38.jpg","galeria39.jpg","galeria4.jpg","galeria40.jpg","galeria41.jpg","galeria42.jpg","galeria43.jpg","galeria44.jpg","galeria45.jpg","galeria46.jpg","galeria47.jpg","galeria48.jpg","galeria49.jpg","galeria5.jpg","galeria50.jpg","galeria51.jpg","galeria52.jpg","galeria53.jpg","galeria54.jpg","galeria55.jpeg","galeria56.jpg","galeria57.jpg","galeria58.jpg","galeria59.jpg","galeria6.jpg","galeria60.jpg","galeria61.gif","galeria62.jpg","galeria63.jpg","galeria64.jpg","galeria65.jpg","galeria66.jpg","galeria67.jpg","galeria68.jpg","galeria69.jpg","galeria7.jpg","galeria70.jpg","galeria71.jpg","galeria72.jpg","galeria73.jpg","galeria74.jpg","galeria75.jpg","galeria76.jpg","galeria77.jpg","galeria78.jpg","galeria79.jpg","galeria8.jpg","galeria80.jpg","galeria81.jpg","galeria82.jpg","galeria83.jpg","galeria84.jpg","galeria85.jpg","galeria86.jpg","galeria87.jpg","galeria88.jpg","galeria89.jpg","galeria9.jpg","galeria90.jpg","galeria91.jpg","galeria92.jpg","galeria93.jpg","galeria94.jpg","galeria95.jpg","galeria96.jpg","galeria97.jpg","galeria98.jpg","galeria99.jpg"
+        ];
+
+        // Mezclar
+        function shuffle(array){
+            for(let i=array.length-1;i>0;i--){
+                const j=Math.floor(Math.random()*(i+1));
+                [array[i],array[j]]=[array[j],array[i]];
+            }
+            return array;
+        }
+
+        function isVideo(name){ return name.toLowerCase().endsWith('.mp4'); }
+        function isGif(name){ return name.toLowerCase().endsWith('.gif'); }
+
+        // Render usando columnas (masonry-like)
+        function renderColumns(colCount = 3){
+            const container = document.getElementById('scattered');
+            container.innerHTML = '';
+
+            // crear columnas
+            const columns = [];
+            for(let i=0;i<colCount;i++){
+                const col = document.createElement('div');
+                col.className = 'scattered-column';
+                container.appendChild(col);
+                columns.push({el:col,height:0});
+            }
+
+            const list = shuffle(files.slice());
+            list.forEach((name,idx)=>{
+                const item = document.createElement('div');
+                item.className = 'scattered-item';
+
+                const path = '../img/imggaleria/' + name;
+                let media;
+                if(isVideo(name)){
+                    media = document.createElement('video');
+                    media.src = path; media.muted=true; media.loop=true; media.playsInline=true; media.className='scattered-media';
+                    media.addEventListener('mouseover',()=>media.play());
+                    media.addEventListener('mouseout',()=>media.pause());
+                    media.addEventListener('click',()=>openModal('video',path));
+                } else {
+                    media = document.createElement('img');
+                    media.src = path; media.alt = name; media.className='scattered-media'; media.loading = 'lazy';
+                    media.addEventListener('click',()=>openModal('image',path));
+                }
+
+                // estilo 'desordenado' leve
+                const rot = (Math.random()*12-6).toFixed(2);
+                const ty = (Math.random()*8-4).toFixed(1);
+                media.style.transform = `rotate(${rot}deg) translateY(${ty}px)`;
+
+                item.appendChild(media);
+
+                // elegir la columna más corta (greedy)
+                columns.sort((a,b)=>a.height-b.height);
+                columns[0].el.appendChild(item);
+                // estimación de altura para balanceo (aprox)
+                columns[0].height += 260 + 18; // media height + gap
+            });
+        }
+
+        // Modal reuse
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalClose = document.getElementById('modal-close');
+        function openModal(type,path){ modalContent.innerHTML=''; if(type==='video'){ const v=document.createElement('video'); v.src=path; v.controls=true; v.autoplay=true; v.className='modal-media'; modalContent.appendChild(v);} else { const i=document.createElement('img'); i.src=path; i.className='modal-media'; modalContent.appendChild(i);} modal.setAttribute('aria-hidden','false'); modal.style.display='flex'; }
+        function closeModal(){ modal.setAttribute('aria-hidden','true'); modal.style.display='none'; modalContent.innerHTML=''; }
+        modalClose.addEventListener('click',closeModal);
+        modal.addEventListener('click',(e)=>{ if(e.target===modal) closeModal(); });
+
+        // init y resize
+        document.addEventListener('DOMContentLoaded', ()=>{
+            function chooseCols(){
+                const w = window.innerWidth;
+                if(w>1400) return 4;
+                if(w>1000) return 3;
+                if(w>700) return 2;
+                return 1;
+            }
+            renderColumns(chooseCols());
+            let resizeTimer;
+            window.addEventListener('resize', ()=>{
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(()=>{
+                    renderColumns(chooseCols());
+                },200);
+            });
+        });
+    </script>
+</section>
+<footer>Fotos eternas 💜</footer>
+</body>
+</html>
